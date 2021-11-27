@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-	int num_steps = 400000000;
+	int num_steps = 200000000;
 	double width = 1.0 / double(num_steps);
 	double sum = 0.0;
 	

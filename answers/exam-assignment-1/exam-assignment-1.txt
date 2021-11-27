@@ -1,0 +1,37 @@
+
+1. Describe how parallelism differs from concurrency.
+
+The concept of concurrency describes the ability of a system to have 
+multiple processes running simultaneously. This can be archieved by running
+the processes on different cpu's and/or having one or more processes share
+a cpu. The first solution can be called true parallelism, which means 
+that multiple processes can really be executed simultaneously.
+The second solution to realize concurrency is often referred to as
+apparent parallelism (scheinbarer Parallelismus) and is realized
+by executing each process for short amount of time and frequently switching
+the currently executed process. This kind of concurrency requires the maintainance of
+the state of each process, usually referred to as process context.
+In conclusion, parallelism is a form of concurrency which relies on hardware
+ressources to execute processes simultaneously and thereby 
+
+2. What is fork-join-parallelism?
+
+Fork-join-parallelism is a kind of parallelism that is realized
+through forks and joins. On a start of a section that should be
+executed in parallel, the desired amount of processes - 1 is forked
+(created by copying the process context) from the process
+of the main program. All processes now enter the section that is
+supposed to be executed in parallel. They execute this section and
+when every process is finished executing they signal the process that 
+forked them that they are done. When the process of the main program
+got the join signal from every forked process, he can continue running.
+   
+3. Read Chapter 1 from Computer Systems: A programmer's perspective and
+discuss one thing you find particularly interesting.
+
+
+
+4. Read the paper ... and explain the figure "Performance gains after 
+Moore's law ends.
+
+
