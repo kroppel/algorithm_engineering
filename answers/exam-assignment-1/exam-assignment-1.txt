@@ -34,4 +34,12 @@ discuss one thing you find particularly interesting.
 4. Read the paper ... and explain the figure "Performance gains after 
 Moore's law ends.
 
+The figure gives an overview about 'high-level' ways to increase
+computing performance, in contrast to 'low-level' performance gains
+that in the past were usually achieved by increasing the number of
+transistors on a chip (described by Moore's law). As the transistor density
+on CPU's reaches it's physical limits, other ways to increase
+performance gain importance. The figure names 3 approaches to this:
 
+By writing code in such a way that acknowledges the underlying hardware
+architecture,
