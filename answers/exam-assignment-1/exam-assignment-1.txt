@@ -2,17 +2,17 @@
 1. Describe how parallelism differs from concurrency.
 
 The concept of concurrency describes the ability of a system to have 
-multiple processes running simultaneously. This can be archieved by running
-the processes on different cpu's and/or having one or more processes share
-a cpu. The first solution can be called true parallelism, which means 
+multiple processes in a running state simultaneously. This can be archieved by
+running the processes on different cpu's and/or having one or more processes 
+share a cpu. The first solution can be called true parallelism, which means 
 that multiple processes can really be executed simultaneously.
 The second solution to realize concurrency is often referred to as
 apparent parallelism (scheinbarer Parallelismus) and is realized
 by executing each process for short amount of time and frequently switching
-the currently executed process. This kind of concurrency requires the maintainance of
-the state of each process, usually referred to as process context.
-In conclusion, parallelism is a form of concurrency which relies on hardware
-ressources to execute processes simultaneously and thereby 
+the currently executed process. This kind of concurrency requires the maintainance
+of the state of each process, usually referred to as process context.
+In conclusion, parallelism is a form of concurrency which relies on 
+the availability of multiple processing units to execute processes simultaneously.
 
 2. What is fork-join-parallelism?
 
@@ -30,16 +30,22 @@ got the join signal from every forked process, he can continue running.
 discuss one thing you find particularly interesting.
 
 
-
 4. Read the paper ... and explain the figure "Performance gains after 
 Moore's law ends.
 
 The figure gives an overview about 'high-level' ways to increase
 computing performance, in contrast to 'low-level' performance gains
-that in the past were usually achieved by increasing the number of
+that in the past were achieved by increasing the number of
 transistors on a chip (described by Moore's law). As the transistor density
-on CPU's reaches it's physical limits, other ways to increase
+on modern CPU's reaches it's physical limits, other ways to increase
 performance gain importance. The figure names 3 approaches to this:
+	1.Software performance engineering - write code that executes fast
+	e.g. By writing code in such a way that acknowledges the underlying hardware
+	architecture
+	2.Algorithms - develop algorithms that solve problems fast
+	e.g. By formulating the problem to solve as a problem that can be solved more
+	efficiently
+	3.Hardware architecture - build efficient and individual hardware
+	e.g. By fitting the hardware to the specific problems it has to solve
+	
 
-By writing code in such a way that acknowledges the underlying hardware
-architecture,
