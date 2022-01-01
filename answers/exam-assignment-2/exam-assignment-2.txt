@@ -1,0 +1,35 @@
+What causes false sharing?
+
+False sharing occurs when e.g. variables that are 'write'-accessed by different threads
+reside on the same cache line.
+
+How do mutual exclusion constructs prevent race conditions?
+
+Race conditions occur when multiple threads try to access a variable and 
+at least one of them is trying to change it. Mutual exclusions prevent
+the occurrence of race conditions by ensuring that a given block of code
+is executed by one thread at a time only. 
+
+Explain the differences between static and dynamic schedules in OpenMP.
+
+Static schedules break a given workload into chunks of a given size and 
+divide them evenly across all working threads. On balanced workloads, this
+scheduling works fine, as each thread gets about the same amount of work.
+Dynamic schedules on the other hand break a given workload into chunks
+of a given size and orchestrate them in form of a queue. Each worker thread
+grabs a workload chunk, executes it and after he is finished he grabs a
+new one. This kind of schedule ensures that even unbalanced workloads 
+can be devided the most efficient way between all threads, but comes
+with a bit of overhead due to the orchestration. 
+
+What can we do if we've found a solution while running a parallel loop in OpenMP, but still have many iterations left?
+
+One way to solve this is by using a shared variable that indicates wether
+a thread has found a solution.
+
+Explain in your own words how std::atomic::compare_exchange_weak works.
+
+This function performs a bitwise atomic compare between the object it was called on and
+a given "expected" parameter. On equality it sets the object it was called on
+to a given "desired" parameter value and returns true. Otherwise, it sets
+"expected" to the actual value of the object it was called on and returns false.
