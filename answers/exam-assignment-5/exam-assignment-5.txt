@@ -1,0 +1,6 @@
+1. What is CMake?
+CMake is a tool that generates build files based on scripts (CMakeLists.txt)
+
+2. What role do targets play in CMake?
+
+3. How would you proceed to optimize code?

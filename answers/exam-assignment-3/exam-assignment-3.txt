@@ -1,0 +1,67 @@
+How does the ordered clause in OpenMP work in 
+conjunction with a parallel for loop?
+
+Within an ordered clause inside a parallel for loop,
+it is ensured that, while everything outside of it may
+be run in parallel, that everything inside the clause
+is not only executed sequentially but also in the
+exactly in the iteration order given by the loop.
+
+What is the collapse clause in OpenMP good for?
+
+The collapse clause can be used to conveniently and
+effectively parallelize nested loops without having
+to manually rewrite them into single loop.
+
+Explain how reductions work internally in OpenMP.
+
+The reduction clause specifies the operation and the variable
+in which the reduced value has to be written. To perform
+the actual reduction, OpenMP creates local variables
+for each thread where they can perform the reduction on
+their specific set of values. Each local variable is
+initialized with the zero element of the given reduction operation
+As reduction operations are commutative and associative,
+the threads can perform their local reduction first and
+the resulting intermediate results can afterwards be reduced
+into the end result.
+
+What is the purpose of a barrier in parallel computing?
+
+A barrier is a form of process synchronization. It
+represents an execution point at which every thread
+has first signal that it reached the barrier and
+then has to wait until all other threads signal that
+they reached the barrier too. This ensures that the
+following instructions are not performed by any thread
+until every instruction before the barrier was executed
+by each thread.
+
+Explain the differences between the library routines
+omp_get_num_threads(), omp_get_num_procs() and
+omp_get_max_threads().
+
+omp_get_num_threads() returns the number of threads that
+currently execute the parallel region.
+omp_get_num_procs() on the other hand returns the number
+of processing units that are available to the programm.
+omp_get_max_threads() returns the maximum number of threads
+that can be active in the parallel region or that could
+be active if the call was made in a parallel region.
+
+Clarify how the storage attributes private and
+firstprivate differ from each other.
+
+Both storage attributes have the effect that each thread
+receives a local copy of the given variable. The difference
+is that the variable is uninitialized for each thread when
+the attribute 'private' is used, and it is initialized with
+the value the variable had before the parallel region was entered
+when the attribute 'firstprivate' is used.
+
+Do the coding warmup on slide 18. Write in pseudo
+code how the computation of π can be parallelized
+with simple threads.
+
+Implementation of pi computation with simple c++
+threads can be found in file pi_cpp_only.cpp
