@@ -6,14 +6,16 @@
 #include <iomanip>
 
 using namespace std;
+// Minimum number of vector elements for a vector to be processed by multiple threads
 const int MINIMUM_VECTOR_ELEMENT_NUMBER = 100000;
 
+// Partition (sub-)vector v[l_bound:u_bound] on element with index p
+// Returns: index of pivot element after partitioning
 template <typename T>
-void quicksort(vector<T>& v, int l_bound, int u_bound) {
+int partition(vector<T>& v, int l_bound, int u_bound, int p) {
     T buffer;
     int i = l_bound;
     int j = u_bound - 1;
-    int p = u_bound;
 
     if (u_bound > l_bound) {
         T pivot = v.at(p);
@@ -37,9 +39,18 @@ void quicksort(vector<T>& v, int l_bound, int u_bound) {
             v.at(p) = v.at(i);
             v.at(i) = pivot;
         }
+    }
 
-        quicksort(v, l_bound, i-1);
-        quicksort(v, i+1, u_bound);
+    return i;
+}
+
+template <typename T>
+void quicksort(vector<T>& v, int l_bound, int u_bound) {
+    if (u_bound > l_bound) {
+        int i = partition(v, l_bound, u_bound, u_bound);
+
+        quicksort(v, l_bound, i - 1);
+        quicksort(v, i + 1, u_bound);
     }
 }
 
@@ -95,7 +106,7 @@ void quicksort_parallelized(vector<T>& v, int l_bound, int u_bound) {
 
 int main() {
     double start_time, runtime1, runtime2;
-    const size_t size = 2000000;
+    const size_t size = 1000000;
     vector<int> v1, v2;
     random_device rd;
     mt19937 gen(rd());
@@ -108,11 +119,10 @@ int main() {
     }
     v2 = v1;
 
-
     start_time = omp_get_wtime();
     quicksort(v1, 0, v1.size() - 1);
     runtime1 = omp_get_wtime() - start_time;
-
+    
     start_time = omp_get_wtime();
     quicksort_parallelized(v2, 0, v2.size() - 1);
     runtime2 = omp_get_wtime() - start_time;
