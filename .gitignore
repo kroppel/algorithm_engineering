@@ -1,3 +1,4 @@
 *.idea*
 *.exe
-/project/build/*
+/project/cmake-build-debug/*
+/project/cmake-build-release/*
