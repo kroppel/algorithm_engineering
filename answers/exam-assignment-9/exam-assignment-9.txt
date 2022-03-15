@@ -1,0 +1,90 @@
+1. How do bandwidth-bound computations differ
+from compute-bound computations?
+
+In bandwidth-bound computations the performance of
+the computation is limited due to excessive memory
+accesses, while compute-bound computations are
+limited by CPU instruction throughput. As a consequence,
+compute-bound computations can be accelerated much by
+vectorization or instruction-level parallelism, while
+bandwidth-bound computations do not benefit much from that.
+Bandwidth-bound computations, on the other hand, need to
+exploit fast memory accesses to increase performance,
+e.g. load and process data with high temporal and spatial
+locality. Compute-bound computations do not benefit much
+from these techniques.
+
+2. Explain why temporal locality and spatial locality
+can improve program performance.
+
+As stated above, temporal locality and spatial locality
+can improve performance of programs that load and process
+large amounts of data out of the RAM. As RAM accesses are
+rather costly (100-200 cycles), the program can increase
+performance by loading data out of the caches (optimally L1)
+which only takes about 4 cycles.
+Temporal locality means that data that was loaded into
+the cache is also accessed again multiple times in the near
+future, while it still resides inside the cache. The programmer
+has to make sure that the already loaded cache lines that
+still hold relevant data are not trashed before the last
+data access. This can be done for example by blocking:
+When e.g. large data structures, that do not even fit into
+the cache, are processed multiple times, it makes sense to
+split them up into blocks that fit into the cache and to process
+these blocks individually, if possible. This way the data of the
+current block is less likely to be thrown out of the cache
+before it is completely processed.
+Spatial locality means that the data that is being accessed
+resides nearby in memory. As a consequence, when one data
+element is loaded, the associated cache line holds even more
+data elements. Ideally the whole cache line is filled with
+relevant data. These data elements now do not need to be loaded
+from RAM again and can be accessed through the cache with
+much less latency, as long as the data access is done in
+the near future so the cache line did not get evicted yet.
+A stride one memory access is usually optimal for spatial
+locality.
+
+3. What are differences between data-oriented design and
+object-oriented design?
+
+Object-oriented design uses objects to model and design a
+program based on human intuition and perception. This makes
+the program's components and their design and purpose easily
+understandable to the human programmer, which is important for
+readability and therefore maintainability of large and complex
+systems. These applications usually do not require hardware-aware
+performance fine-tuning.
+Data-driven design typically uses the Structure of Arrays paradigm
+instead of objects, at least for frequently accessed data.
+This ensures a cache-friendly structure of the data so that
+large chunks of data can be processed while memory latency is
+kept as low as possible.
+
+4. What are streaming stores?
+
+Streaming stores are storing operations that bypass the cache and
+write directly to the RAM. This can be useful if the data to store
+was not read into the caches before writing (Cache lines would become
+invalid), if the written data is not needed shortly after writing
+(data would have to be read again from RAM) and if the program
+is memory-bound.
+
+5. Describe a typical cache hierarchy used in Intel CPUs.
+
+A typical Intel cache hierarchy consists of three cache levels.
+The L1 caches are closest to the registers and have an access time
+of around 4 cycles. There are two L1 caches per core: the data and the
+instruction cache (32 KB each).
+The L2 cache has a bigger size than the L1 caches (256 KB), but also
+a higher access time of around 10 cycles. L2 caches exist per core.
+The L3 cache is the largest cache (8 MB), but also the slowest
+(40-75 cycles access time). It is shared by all cores.
+
+6. What are cache conflicts.
+
+Similar to hash collisions, multiple memory block can map to the
+same cache line. In this case, the newly loaded block evicts the
+old cache line content, even if the cache has not reached full
+capacity. This is called a cache conflict / conflict miss.
