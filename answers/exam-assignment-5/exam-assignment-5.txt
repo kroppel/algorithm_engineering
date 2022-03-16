@@ -1,6 +1,23 @@
 1. What is CMake?
+
 CMake is a tool that generates build files based on scripts (CMakeLists.txt)
+It can be used to build, test and package software.
 
 2. What role do targets play in CMake?
 
+A CMake target corresponds to an executable or a library. Like objects,
+targets can be constructed (add_executable() or add_library()),
+and they can be modified (set sources, add compile options, set included directories,
+link libraries)
+
 3. How would you proceed to optimize code?
+
+Optimization of already written and correct code can be effectively
+done in iterations. Every iteration, bottlenecks/hotspots need
+to be identified, and then the programmer has to choose the suiting
+technique to improve the performance of the application at those
+hotspots. Depending on the hotspot or bottleneck, the programmer
+has to modify the algorithm used, or he needs to parallelize or
+vectorize the code if CPU throughput is the problem, or he has
+to improve the cache usage of the program if the computation
+at that hotspot/bottleneck is bandwidth-bound.

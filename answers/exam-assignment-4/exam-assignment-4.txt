@@ -4,21 +4,31 @@ parallelized with tasks in OpenMP.
 One simple way to parallelize divide and conquer algorithms 
 using Openmp tasks is to create a task everytime the workload
 is divided. The current thread will work on one part, while
-another thread can work on the other part of the workload seperately.
+another thread can work on the other part of the workload separately.
 After all recursive calls there might be a taskwait statement
 necessary, to ensure that every task has been executed before
 the instructions that follow the taskwait statement are executed.
 
 2. Describe some ways to speed up merge sort.
 
+One way is the method already discussed above, by creating a new task
+on every workload division. The task consists of two recursive
+merge sort calls on the two divided sub-arrays and the subsequent
+merging of those two sorted sub-arrays. A taskwait statement is
+necessary after the recursive merge sort calls to ensure that
+when merging starts, the two sub-arrays are properly sorted.
+Additionally, a fallback sorting method (unparallelized) may be
+used for very small arrays, as for them the overhead that comes
+with task creation is greater than the actual performance benefit.
 
-3. What is the idea behind multithreaded merging?
+3. What is the idea behind multi-threaded merging?
+
 The idea here is that a pivot element is chosen out of one of
 the two arrays that should be merged. With the requirement satisfied
 that both arrays are sorted, the median of either of the arrays is a
 good choice, as there is a high chance that this pivot divides my
 whole set of values into two subsets that are about the same size.
-This is good, as the remaining merge two workloads (the two sets of values
+This is good, as the remaining two merge workloads (the two sets of values
 greater than and smaller than the pivot):
    -Can now be processed in parallel, as there is no dependency between
    merging all values greater than the pivot and merging all values smaller
@@ -27,3 +37,14 @@ greater than and smaller than the pivot):
 
 4. Read "What every systems programmer should know about concurrency"
 and discuss two things you find particularly interesting.
+
+One thing that's interesting to me are the techniques of a modern CPU
+to optimize the execution during runtime by reordering instructions and
+executing instructions speculatively. In general modern hardware is
+much more complex than what you see as a programmer, and it is
+fascinating to me how well it is hidden from you. But in some
+scenarios, like when you want to have multiple threads working on
+shared data, it's not possible to mask the complexity anymore, and
+you have to adapt to it and use the right tools to realize e.g.
+atomic access to a variable, or to synchronize two threads on a
+certain point of their instruction flow.
