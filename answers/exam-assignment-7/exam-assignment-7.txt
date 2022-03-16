@@ -1,0 +1,48 @@
+1. Explain three vectorization clauses of your choice that
+can be used with '#pragma omp simd'.
+
+aligned(list[:alignment]):
+This clause declares that each object in 'list' is aligned
+to the number of bytes stated in 'alignment', which makes
+it easier for openmp to vectorize the code.
+simdlen(len):
+This clause hints the compiler that it should use
+len as the vector length of the loop.
+safelen(len):
+This clause states an upper limit (len) for the vector length
+for safe vectorization.
+
+2. Give reasons that speak for and against vectorization with
+intrinsics compared to guided vectorization with OpenMP.
+
+Using intrinsics to vectorize the code leads to performance portable
+code that will most likely perform equally good on every system
+independent of OS or Compiler, given that the hardware
+features are similar (of course a program implementing functions
+that use AVX-512 and fallback functions for AVX-2 or SSE if AVX-512
+is not supported will run faster on hardware supporting AVX-512 than
+on hardware supporting only SSE).
+On the other hand, using OpenMP has the advantage of much more
+portable code, as intrinsic data types and functions are specific
+for a particular processor architecture. Adding some pragmas also makes
+the code much more readable than working with intrinsics, and the
+complexity added to the code by vectorization gets masked very well
+when using OpenMP.
+
+3. What are the advantages of vector intrinsics over assembly code?
+
+Vector intrinsics can be used directly inside the C(++) code
+as they are wrappers for assembly instructions and valid C(++) code.
+While some compilers support mixing C(++) and assembly code
+in the source file (inline assembly), it adds another layer of complexity,
+especially for long assembly code, and it should be preferred to have it
+in its own assembly file. I don't think a lot of people are expecting
+to find bits of assembly code inside a C(++) file.
+
+4. What are the corresponding vectors of the three intrinsic data
+types:
+
+__m256 -> vector containing 8 single precision float numbers
+__m256d -> vector containing 4 double precision float numbers
+__m256i -> vector containing 4 long integers, 8 integers,
+            16 short integers or 32 chars (signed/unsigned)
