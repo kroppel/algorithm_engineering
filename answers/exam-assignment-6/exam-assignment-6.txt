@@ -1,0 +1,42 @@
+1. Name some characteristics of the instruction sets:
+
+SSE:
+-Works with 128-bit vectors
+-the 16 CPU vector registers are named xmm0 to xmm15
+AVX(2):
+-Works with 256-bit vectors
+-the 16 CPU vector registers are named ymm0 to ymm15
+AVX-512:
+-Works with 512-bit vectors
+-the 32 CPU vector registers are named zmm0 to zmm31
+
+2. How can memory aliasing affect performance?
+
+When two pointers point to the same or overlapping memory locations
+it is called memory aliasing. Without further information, the
+compiler is forced to make conservative assumptions about
+variables when aliasing is possible, leading to less optimized code.
+By restricting pointers (stating that they are not aliased) the
+compiler can perform optimizations that were not possible before,
+for example constant propagation or code reordering.
+
+3. What are the advantages of unit stride (stride 1) memory
+access compared to accessing memory with larger strides (e.g. 8)?
+
+Stride 1 access improves spatial locality usually much more
+than larger strides. If for example an (aligned) array of a given type
+(e.g. double) allows 8 data elements to fit into a cache line,
+accessing these data elements with stride 1 access leads
+to 1 RAM memory access followed by 7 cache hits. Stride 8 access
+to 8 elements leads to 8 subsequent cache misses, as each element accessed
+resides on a different cache line.
+
+4. When would you prefer arranging records in memory as Structure
+of Arrays?
+
+Structure of Arrays is suitable if the records need to be read/processed
+with maximum performance and if they can be processed in batches per each record field.
+This layout leads to high spatial locality for the record fields inside
+each array, which is cache-friendly and makes it easier for the compiler
+to vectorize the code automatically. This is the case for example
+in visual and graphics computing.
