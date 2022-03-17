@@ -1,0 +1,72 @@
+1. Explain the naming conventions for intrinsic functions.
+(_<vector_size>_<operation>_<suffix>)
+
+Intrinsic function names convey 3 pieces of information:
+-> vector_size states the size of the vector returned by the
+function (mm for 128 bit vectors, mm256 for 256 bit vectors
+and mm512 for 512 bit vectors)
+-> operation states the functionality that the function
+implements
+-> suffix indicates as which type the input vector elements
+are treated
+
+2. What do the metrics latency and throughput tell you
+about the performance of an intrinsic function?
+
+Latency describes the number of cycles it takes for the
+return value of the function to present in the destination
+register.
+Throughput describes the number of cycles it takes to
+to make the next call to that intrinsic function.
+When a function shows high latency value in combination
+with low throughput, it should be called as much as
+possible consecutively. This hides the long latency
+time, as function calls are made very frequent due
+to the low throughput and after waiting one latency
+duration the return values of the calls should
+be available one after another with just the throughput
+cycle time in between.
+
+
+3. How do modern processors realize instruction-level
+parallelism?
+
+Modern processors realize instruction-level parallelism
+with a scheduler and many functional units. Complex
+instructions of the instruction set are broken down
+into sets of micro operations. The scheduler manages the
+execution of these micro operations putting them in
+queue for the respective functional unit that can
+execute them. 
+
+4. How may loop unrolling affect the execution time of
+compiled code?
+
+Loop unrolling can have a positive impact on the execution
+time of compiled code due to various effects.
+One aspect is that loops usually have a conditional
+statement that has to be evaluated after every iteration.
+Loop unrolling reduces the number of necessary evaluations.
+It also supports pipelining better as brach penalty is
+reduced (less branches to be predicted (breaks from loop))
+Another aspect is that due to the unrolling the compiler
+can vectorize the code if the instructions are independent
+of each other 
+
+5. What does a high IPC value (instructions per cycle)
+mean in terms of the performance of an algorithm?
+
+A high IPC value tells you that the algorithm is performing
+a large amount of instructions during one cycle, which basically
+means that the implementation of that exact algorithm might be
+performant. It can only be used to compare implementations of 
+the same algorithm with each other.
+It tells you nothing about your algorithms efficiency
+to solve the problem it is designed for. So one algorithm
+may have a low IPC value even if it solves your problem really
+efficient, e.g. by only needing a few instructions that it
+executes in a few cycles. Another algorithm may have a
+high IPC value, but also needs lots of instructions and
+an ultimately higher amount of cycles to finish.
+Then the algorithm with the lower IPC value is still
+the more performant algorithm
