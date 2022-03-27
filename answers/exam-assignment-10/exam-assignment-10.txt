@@ -1,0 +1,31 @@
+1. Name and explain some useful compiler flags during development.
+
+-Wall: to enable all compiler warnings
+-fsanitize=address: to detect invalid memory accesses such as out-of-bound
+accesses or memory leaks
+-fsanitize=undefined: to detect undefined behavior at runtime, such as integer overflows
+
+2. How could Intel oneAPI help you write better programs?
+
+The Intel oneAPI Toolkit provides lots of tools that can be useful for
+performance optimization, application correctness verification etc.
+It includes e.g. the Intel VTune Profiler, which helps identifying
+performance hotspots, monitors threading information and memory accesses.
+It also provides a compiler for the programming language 'Data Parallel C++'.
+
+3. What can we learn from the following quote?
+"Premature optimization is the root of all evil" (Donald
+Knuth).
+
+When an application has to be optimized, it is important to follow
+a workflow that ensures that the optimization process is as effective
+as possible while the programs functionality remains unchanged.
+'Premature Optimization' may lead to ineffective optimization (time waste),
+or it may actually change the programs functionality or lead to undefined
+behavior that is noticed after the application is already in production stage.
+To minimize these risks, a structured and well monitored optimization process
+is important. Use a profiler to measure the performance of the application
+and its components. With that information, find bottlenecks your application
+that really impact performance then work on optimizing these specific hotspots.
+Iterate through this workflow until the performance gain converges or the
+desired performance is reached.
