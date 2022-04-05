@@ -47,6 +47,26 @@ int partition(vector<T>& v, int l_bound, int u_bound, int p) {
     return i;
 }
 
+// Retrieve the element from v that has index k in sorted vector v'
+// Returns: Element v'[k]
+template <typename T>
+T quickselect(vector<T>& v, int l_bound, int u_bound, int k) {
+    if (l_bound == u_bound) {
+        return v.at(l_bound);
+    }
+    int p = u_bound;
+    p = partition(v, l_bound, u_bound, p);
+    if (p == k) {
+        return v.at(p);
+    }
+    else if (p < k) {
+        return quickselect(v, p+1, u_bound, k);
+    }
+    else {
+        return quickselect(v, l_bound, p-1, k);
+    }
+}
+
 template <typename T>
 void quicksort(vector<T>& v, int l_bound, int u_bound) {
     if (u_bound > l_bound) {
