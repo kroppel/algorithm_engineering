@@ -2,6 +2,9 @@
 #define ALG_ENG_FUNCTIONS
 
 template <typename T>
+int partition_pivot(std::vector<T>& v, int l_bound, int u_bound, T pivot);
+
+template <typename T>
 int partition_fetch_add(std::vector<T>& v, int size, int p);
 
 template <typename T>
