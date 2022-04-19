@@ -18,10 +18,10 @@ TEST_CASE("Partition_fetch_add: vector of type <int> with 6 elements", "[correct
 
     partition(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;});
     //partition_fetch_add(v2, v2.size(), v2.size()-1);
-    partition_fetch_add(v2.begin(), v2.end(), [&pivot](int x) {return x<=pivot;});
+    partition_fetch_add(v2, v2.size(), v2.size()-1, 8);
     partition_pivot(v3, 0, v3.size()-1, pivot);
 
-    //REQUIRE(v1 == v2);
+    REQUIRE(v1 == v2);
     REQUIRE(std::is_partitioned(v2.begin(), v2.end(), [&pivot](int x) {return x<=pivot;}));
     REQUIRE(v1 == v3);
 
@@ -29,7 +29,7 @@ TEST_CASE("Partition_fetch_add: vector of type <int> with 6 elements", "[correct
 
 TEST_CASE("Partition_fetch_add: vector of type <int> with 10000000 elements", "[correctness]") {
     double start_time, runtime1, runtime2, runtime3;
-    const size_t size = 100000000;
+    const size_t size = 10000;
     std::vector<int> v1, v2, v3;
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -50,7 +50,7 @@ TEST_CASE("Partition_fetch_add: vector of type <int> with 10000000 elements", "[
     runtime1 = omp_get_wtime() - start_time;
 
     start_time = omp_get_wtime();
-    partition_fetch_add(v2, v2.size(), v2.size()-1);
+    partition_fetch_add(v2, v2.size(), v2.size()-1, 8);
     runtime2 = omp_get_wtime() - start_time;
 
     start_time = omp_get_wtime();
