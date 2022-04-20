@@ -83,44 +83,51 @@ template<typename T>
 int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
     int num_blocks = size / block_size;
     T pivot = v.at(p);
-    int number_of_threads = 2;
+    int number_of_threads = 4;
     int return_value;
+
+    if (num_blocks == 0) {
+        return partition(v, 0, v.size()-1, v.size()-1);
+    }
 
     // Atomic indices for vector access
     std::atomic<int> i(0);
     std::atomic<int> j(0);
-    std::atomic<int> k(num_blocks-1);
+    std::atomic<int> k(0);
 
     std::vector<int> clean_up_left(number_of_threads, -1);
     std::vector<int> clean_up_right(number_of_threads, -1);
     std::atomic<int> cul(0);
     std::atomic<int> cur(0);
 
-#pragma omp parallel num_threads(number_of_threads) shared(num_blocks, pivot, i, j, k)
+    /*std::cout << "Call Function with v size: " << size << "\n";
+    std::cout << "Block size: " << block_size << "\n";
+    std::cout << "Nr. Blocks: " << num_blocks << "\n";
+    std::cout << "Pivot: " << pivot << "\n";*/
+
+#pragma omp parallel num_threads(number_of_threads) shared(size, num_blocks, pivot, i, j, k)
     {
         bool fetch_left = true;
         bool fetch_right = true;
 
         int l, r;
 
-        std::cout << "Call Function\n";
-
         while (std::atomic_fetch_add(&i, 1) < num_blocks) {
             if (fetch_left) {
                 l = std::atomic_fetch_add(&j, 1);
                 fetch_left = false;
             } else if (fetch_right) {
-                r = std::atomic_fetch_add(&k, -1);
+                r = std::atomic_fetch_add(&k, 1);
                 fetch_right = false;
             }
 
-            if (!(fetch_left || fetch_right)) {
+            if (!fetch_left && !fetch_right) {
                 // block offset
                 int a = 0;
                 int b = 0;
                 // global indices of first block element
                 int v_a = l * block_size;
-                int v_b = r * block_size;
+                int v_b = size - ((r + 1) * block_size);
                 T buffer;
                 bool swap_left = false;
                 bool swap_right = false;
@@ -164,30 +171,47 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
             clean_up_left.at(std::atomic_fetch_add(&cul, 1)) = l * block_size;
         }
         if (!fetch_right) {
-            clean_up_right.at(std::atomic_fetch_add(&cur, 1)) = r * block_size;
+            clean_up_right.at(std::atomic_fetch_add(&cur, 1)) = size - ((r + 1) * block_size);
         }
     }
-    std::cout << "First Phase finished\n";
+
     /*
      * Clean up 1st step: (sorting maybe two threads)
      *  Swap elements between remaining left and right blocks
      *  -> everything left of j or everything right of k is now correctly partitioned
      */
+    /*for (int index; index < clean_up_left.size(); index++) {
+        std::cout << clean_up_left.at(index) << ", ";
+    }
+    std::cout << "\n";
+    for (int index; index < clean_up_right.size(); index++) {
+        std::cout << clean_up_right.at(index) << ", ";
+    }
+    std::cout << "\n";*/
     std::sort(clean_up_left.data(), clean_up_left.data()+cul.load());
     std::sort(clean_up_right.data(), clean_up_right.data()+cur.load(), [](int a, int b) {
         return a > b;});
 
+    /*for (int index; index < clean_up_left.size(); index++) {
+        std::cout << clean_up_left.at(index) << ", ";
+    }
+    std::cout << "\n";
+    for (int index; index < clean_up_right.size(); index++) {
+        std::cout << clean_up_right.at(index) << ", ";
+    }
+    std::cout << "\n";*/
+
     int a_block = 0;
     int b_block = 0;
+
+    int a = 0;
+    int b = 0;
 
     T buffer;
     bool swap_left = false;
     bool swap_right = false;
 
     while (a_block < cul.load() && b_block < cur.load()) {
-        int a = 0;
-        int b = 0;
-
         while (a < block_size && b < block_size) {
             while (a < block_size) {
                 if (v.at(clean_up_left.at(a_block) + a) > pivot) {
@@ -197,7 +221,7 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
                 a++;
             }
             while (b < block_size) {
-                if (v.at(clean_up_left.at(b_block) + b) <= pivot) {
+                if (v.at(clean_up_right.at(b_block) + b) <= pivot) {
                     swap_right = true;
                     break;
                 }
@@ -205,30 +229,49 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
             }
             if (swap_left && swap_right) {
                 buffer = v.at(clean_up_left.at(a_block) + a);
-                v.at(clean_up_left.at(a_block) + a) = v.at(clean_up_left.at(b_block) + b);
-                v.at(clean_up_left.at(b_block) + b) = buffer;
+                v.at(clean_up_left.at(a_block) + a) = v.at(clean_up_right.at(b_block) + b);
+                v.at(clean_up_right.at(b_block) + b) = buffer;
                 swap_left = false;
                 swap_right = false;
             }
         }
-        if (a == block_size)
+        if (a == block_size) {
+            a = 0;
             a_block++;
-        if (b == block_size)
+        }
+        if (b == block_size) {
+            b = 0;
             b_block++;
+        }
     }
-    std::cout << "Cleanup first step finished\n";
 
     /*
     * Clean up 2nd step:
     * partition remainder between L and R (maybe do in parallel with 1st step)
     */
+    int partition_index = (j.load() * block_size < size - (k * block_size)-1) ? partition_pivot(v, (j.load()) * block_size, size - (k * block_size)-1, pivot) : -1;
 
-    int partition_index = partition_pivot(v, j.load() * block_size, k.load() * block_size + block_size - 1, pivot);
 
-    std::cout << "Cleanup second step finished\n";
 
     if (a_block == cul.load()) {
-        int l = partition_index;
+        int l = (partition_index == -1) ? j.load()*block_size : partition_index+1;
+
+        /*std::cout << "l-3: " << v.at(l-3) << "\n";
+        std::cout << "l-2: " << v.at(l-2) << "\n";
+        std::cout << "l-1: " << v.at(l-1) << "\n";
+        std::cout << "l: " << v.at(l) << "\n";
+        std::cout << "l+1: " << v.at(l+1) << "\n";*/
+
+        /*for (int index = 0; index < l; index++) {
+            if (v.at(index) > pivot) {
+                std::cout << "#### Left side not partitioned! ###\n";
+                std::cout << "#### " << v.at(index) << " at index " << index << "\n";
+
+                return 0;
+            }
+        }*/
+
+
 
         /*
          * Cleanup 3rd step:
@@ -238,9 +281,9 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
 
         swap_left = false;
         swap_right = false;
-        int b = 0;
+        b = 0;
 
-        while (b_block < cur.load() && (clean_up_right.at(b_block)+block_size-1-b) > l) {
+        while (b_block < cur.load()) {
             while (b < block_size) {
                 if (v.at(clean_up_right.at(b_block)+block_size-1-b) <= pivot) {
                     swap_right = true;
@@ -254,6 +297,9 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
                     break;
                 }
                 l++;
+            }
+            if ((clean_up_right.at(b_block)+block_size-1-b) <= l) {
+                break;
             }
             if (swap_right && swap_left) {
                 buffer = v.at(clean_up_right.at(b_block)+block_size-1-b);
@@ -270,12 +316,24 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
         return_value = (v.at(l)<=pivot) ? l: l-1;
     }
     else {
-        /*
-         * Clean up 2nd step:
-         * partition remainder between L and R (maybe do in parallel with 1st step)
-         */
+        int r = (partition_index == -1) ? size - (k * block_size)-1 : partition_index;
 
-        int r = partition_index-1;
+        /*std::cout << "r-1: " << v.at(r-1) << "\n";
+        std::cout << "r: " << v.at(r) << "\n";
+        std::cout << "r+1: " << v.at(r+1) << "\n";
+        std::cout << "r+2: " << v.at(r+2) << "\n";
+        std::cout << "r+3: " << v.at(r+3) << "\n";*/
+
+
+        /*for (int index = r+1; index < v.size(); index++) {
+            if (v.at(index) <= pivot) {
+                std::cout << "#### Right side not partitioned! ###\n";
+                std::cout << "#### " << v.at(index) << " at index " << index << "\n";
+
+                return 0;
+            }
+        }*/
+
 
         /*
          * Cleanup 3rd step:
@@ -285,22 +343,25 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
 
         swap_left = false;
         swap_right = false;
-        int a = 0;
+        a = 0;
 
-        while (a_block < cul.load() && (clean_up_left.at(a_block)+a) < r) {
+        while (a_block < cul.load()) {
             while (a < block_size) {
-                if (v.at(clean_up_left.at(a_block)+a) <= pivot) {
+                if (v.at(clean_up_left.at(a_block)+a) > pivot) {
                     swap_right = true;
                     break;
                 }
                 a++;
             }
-            while (r < clean_up_left.at(a_block)+a) {
-                if (v.at(r) > pivot) {
+            while (r > clean_up_left.at(a_block)+a) {
+                if (v.at(r) <= pivot) {
                     swap_left = true;
                     break;
                 }
-                r++;
+                r--;
+            }
+            if ((clean_up_left.at(a_block)+a) >= r) {
+                break;
             }
             if (swap_right && swap_left) {
                 buffer = v.at(clean_up_left.at(a_block)+a);
@@ -314,9 +375,11 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
                 a_block++;
             }
         }
+
+
         return_value = (v.at(r)<=pivot) ? r: r-1;
     }
-    std::cout << "Cleanup third step finished\n";
+
     return return_value;
 }
 
