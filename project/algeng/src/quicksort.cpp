@@ -80,10 +80,9 @@ int partition_pivot(std::vector<T>& v, int l_bound, int u_bound, T pivot) {
 // Partition (sub-)vector v[l_bound:u_bound] on element with index p
 // Returns: index of pivot element after partitioning
 template<typename T>
-int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
-    int num_blocks = size / block_size;
-    T pivot = v.at(p);
-    int number_of_threads = 4;
+int partition_fetch_add(std::vector<T>& v, const int size, const int p, const int block_size, const int number_of_threads) {
+    const int num_blocks = size / block_size;
+    const T pivot = v.at(p);
     int return_value;
 
     if (num_blocks == 0) {
@@ -178,7 +177,7 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
     /*
      * Clean up 1st step: (sorting maybe two threads)
      *  Swap elements between remaining left and right blocks
-     *  -> everything left of j or everything right of k is now correctly partitioned
+     *  -> everything left of j OR everything right of k is now correctly partitioned
      */
     /*for (int index; index < clean_up_left.size(); index++) {
         std::cout << clean_up_left.at(index) << ", ";
@@ -211,47 +210,56 @@ int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size) {
     bool swap_left = false;
     bool swap_right = false;
 
-    while (a_block < cul.load() && b_block < cur.load()) {
-        while (a < block_size && b < block_size) {
-            while (a < block_size) {
-                if (v.at(clean_up_left.at(a_block) + a) > pivot) {
-                    swap_left = true;
-                    break;
+    int partition_index;
+
+#pragma omp parallel num_threads(2) shared(a_block, b_block, a, b, buffer, swap_left, swap_right, partition_index)
+    {
+#pragma omp single nowait
+        {
+            while (a_block < cul.load() && b_block < cur.load()) {
+                while (a < block_size && b < block_size) {
+                    while (a < block_size) {
+                        if (v.at(clean_up_left.at(a_block) + a) > pivot) {
+                            swap_left = true;
+                            break;
+                        }
+                        a++;
+                    }
+                    while (b < block_size) {
+                        if (v.at(clean_up_right.at(b_block) + b) <= pivot) {
+                            swap_right = true;
+                            break;
+                        }
+                        b++;
+                    }
+                    if (swap_left && swap_right) {
+                        buffer = v.at(clean_up_left.at(a_block) + a);
+                        v.at(clean_up_left.at(a_block) + a) = v.at(clean_up_right.at(b_block) + b);
+                        v.at(clean_up_right.at(b_block) + b) = buffer;
+                        swap_left = false;
+                        swap_right = false;
+                    }
                 }
-                a++;
-            }
-            while (b < block_size) {
-                if (v.at(clean_up_right.at(b_block) + b) <= pivot) {
-                    swap_right = true;
-                    break;
+                if (a == block_size) {
+                    a = 0;
+                    a_block++;
                 }
-                b++;
-            }
-            if (swap_left && swap_right) {
-                buffer = v.at(clean_up_left.at(a_block) + a);
-                v.at(clean_up_left.at(a_block) + a) = v.at(clean_up_right.at(b_block) + b);
-                v.at(clean_up_right.at(b_block) + b) = buffer;
-                swap_left = false;
-                swap_right = false;
+                if (b == block_size) {
+                    b = 0;
+                    b_block++;
+                }
             }
         }
-        if (a == block_size) {
-            a = 0;
-            a_block++;
-        }
-        if (b == block_size) {
-            b = 0;
-            b_block++;
+#pragma omp single nowait
+        {
+            /*
+            * Clean up 2nd step:
+            * partition remainder between L and R
+            */
+            partition_index = (j.load() * block_size < size - (k * block_size) - 1
+                    ) ? partition_pivot(v, (j.load()) * block_size, size - (k * block_size) - 1, pivot) : -1;
         }
     }
-
-    /*
-    * Clean up 2nd step:
-    * partition remainder between L and R (maybe do in parallel with 1st step)
-    */
-    int partition_index = (j.load() * block_size < size - (k * block_size)-1) ? partition_pivot(v, (j.load()) * block_size, size - (k * block_size)-1, pivot) : -1;
-
-
 
     if (a_block == cul.load()) {
         int l = (partition_index == -1) ? j.load()*block_size : partition_index+1;

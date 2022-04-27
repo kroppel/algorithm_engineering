@@ -5,7 +5,7 @@ template <typename T>
 int partition_pivot(std::vector<T>& v, int l_bound, int u_bound, T pivot);
 
 template <typename T>
-int partition_fetch_add(std::vector<T>& v, int size, int p, int block_size);
+int partition_fetch_add(std::vector<T>& v, const int size, const int p, const int block_size, const int number_of_threads);
 
 template <typename T>
 void quicksort(std::vector<T>& v, int l_bound, int u_bound);
