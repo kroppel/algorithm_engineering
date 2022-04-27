@@ -89,20 +89,16 @@ int partition_fetch_add(std::vector<T>& v, const int size, const int p, const in
         return partition(v, 0, v.size()-1, v.size()-1);
     }
 
-    // Atomic indices for vector access
+    // indices for synchronized vector access
     std::atomic<int> i(0);
     std::atomic<int> j(0);
     std::atomic<int> k(0);
 
     std::vector<int> clean_up_left(number_of_threads, -1);
     std::vector<int> clean_up_right(number_of_threads, -1);
+    // indices for synchronized accesses to the clean-up vectors
     std::atomic<int> cul(0);
     std::atomic<int> cur(0);
-
-    /*std::cout << "Call Function with v size: " << size << "\n";
-    std::cout << "Block size: " << block_size << "\n";
-    std::cout << "Nr. Blocks: " << num_blocks << "\n";
-    std::cout << "Pivot: " << pivot << "\n";*/
 
 #pragma omp parallel num_threads(number_of_threads) shared(size, num_blocks, pivot, i, j, k)
     {
@@ -161,7 +157,8 @@ int partition_fetch_add(std::vector<T>& v, const int size, const int p, const in
                     fetch_right = true;
             }
         }
-        /* Clean up preparation:
+        /*
+         * Clean up preparation:
          *  if fetch_left = true and fetch_right = true -> all blocks were processed completely -> no clean up needed
          *  if fetch_left = false -> left block needs to be processed further
          *  if fetch_right = false -> right block needs ...
@@ -179,26 +176,10 @@ int partition_fetch_add(std::vector<T>& v, const int size, const int p, const in
      *  Swap elements between remaining left and right blocks
      *  -> everything left of j OR everything right of k is now correctly partitioned
      */
-    /*for (int index; index < clean_up_left.size(); index++) {
-        std::cout << clean_up_left.at(index) << ", ";
-    }
-    std::cout << "\n";
-    for (int index; index < clean_up_right.size(); index++) {
-        std::cout << clean_up_right.at(index) << ", ";
-    }
-    std::cout << "\n";*/
+
     std::sort(clean_up_left.data(), clean_up_left.data()+cul.load());
     std::sort(clean_up_right.data(), clean_up_right.data()+cur.load(), [](int a, int b) {
         return a > b;});
-
-    /*for (int index; index < clean_up_left.size(); index++) {
-        std::cout << clean_up_left.at(index) << ", ";
-    }
-    std::cout << "\n";
-    for (int index; index < clean_up_right.size(); index++) {
-        std::cout << clean_up_right.at(index) << ", ";
-    }
-    std::cout << "\n";*/
 
     int a_block = 0;
     int b_block = 0;
@@ -264,29 +245,11 @@ int partition_fetch_add(std::vector<T>& v, const int size, const int p, const in
     if (a_block == cul.load()) {
         int l = (partition_index == -1) ? j.load()*block_size : partition_index+1;
 
-        /*std::cout << "l-3: " << v.at(l-3) << "\n";
-        std::cout << "l-2: " << v.at(l-2) << "\n";
-        std::cout << "l-1: " << v.at(l-1) << "\n";
-        std::cout << "l: " << v.at(l) << "\n";
-        std::cout << "l+1: " << v.at(l+1) << "\n";*/
-
-        /*for (int index = 0; index < l; index++) {
-            if (v.at(index) > pivot) {
-                std::cout << "#### Left side not partitioned! ###\n";
-                std::cout << "#### " << v.at(index) << " at index " << index << "\n";
-
-                return 0;
-            }
-        }*/
-
-
-
         /*
          * Cleanup 3rd step:
          * Swap elements > pivot starting from pivot border l
          * with elements < pivot from the remaining blocks
          */
-
         swap_left = false;
         swap_right = false;
         b = 0;
@@ -326,29 +289,11 @@ int partition_fetch_add(std::vector<T>& v, const int size, const int p, const in
     else {
         int r = (partition_index == -1) ? size - (k * block_size)-1 : partition_index;
 
-        /*std::cout << "r-1: " << v.at(r-1) << "\n";
-        std::cout << "r: " << v.at(r) << "\n";
-        std::cout << "r+1: " << v.at(r+1) << "\n";
-        std::cout << "r+2: " << v.at(r+2) << "\n";
-        std::cout << "r+3: " << v.at(r+3) << "\n";*/
-
-
-        /*for (int index = r+1; index < v.size(); index++) {
-            if (v.at(index) <= pivot) {
-                std::cout << "#### Right side not partitioned! ###\n";
-                std::cout << "#### " << v.at(index) << " at index " << index << "\n";
-
-                return 0;
-            }
-        }*/
-
-
         /*
          * Cleanup 3rd step:
          * Swap elements > pivot starting from pivot border l
          * with elements < pivot from the remaining blocks
          */
-
         swap_left = false;
         swap_right = false;
         a = 0;
@@ -390,109 +335,6 @@ int partition_fetch_add(std::vector<T>& v, const int size, const int p, const in
 
     return return_value;
 }
-
-/*// Partition (sub-)vector v[l_bound:u_bound] on element with index p
-// Returns: index of pivot element after partitioning
-template <class It>
-using T = typename std::iterator_traits<It>::value_type;
-
-template<class It, class Compare = std::less<T<It>>>
-int partition_strided(It start, It end, Compare cmp = Compare{}) {
-    auto const size = std::distance(start, end);
-    int buffer[2*omp_get_num_threads()];
-    T<It> buffer_left;
-    T<It> buffer_right;
-
-    std::atomic<int> i(0);
-    std::atomic<int> j(0);
-    std::atomic<int> k(size-1);
-    std::atomic<int> b_fetch(0);
-    std::atomic<int> b_store(0);
-    std::atomic<int> phase1_synch(0);
-    std::atomic<int> phase2_synch(0);
-    std::atomic<int> phase3_synch(0);
-
-
-    int l, r;
-    bool swap_elements = false;
-
-#pragma omp parallel num_threads(2) shared(v, i, j, k, buffer, b_fetch, b_store, phase1_synch, phase2_synch, phase3_synch) private(l, r, buffer_left, buffer_right) firstprivate(pivot, swap_elements, size)
-    {
-        std::cout << omp_get_num_threads() << "\n";
-        while (int t = atomic_fetch_add(&i, 1) < size) {
-            //std::cout << "Thread " << omp_get_thread_num() << "\n";
-            if (!swap_elements) {
-                l = atomic_fetch_add(&j, 1);
-                buffer_left = v.at(l);
-                //std::cout << "Buffer left: " << (int) buffer_left << "\n";
-                if (!cmp(buffer_left)) {
-                    swap_elements = true;
-                }
-            } else {
-                r = atomic_fetch_add(&k, -1);
-                buffer_right = v.at(r);
-                if (cmp(buffer_right)) {
-                    // -> each index > k is guaranteed to hold elements > pivot, as each element <= pivot
-                    // gets switched with and element lower than j at some point
-                    v.at(l) = buffer_right;
-                    v.at(r) = buffer_left;
-                    swap_elements = false;
-                    //std::cout << "Swapping: " << (int) buffer_left << " and " << (int) buffer_right << "\n";
-                }
-            }
-        }
-//#pragma omp barrier
-        atomic_fetch_add(&phase1_synch, 1);
-        while(phase1_synch.load() < omp_get_thread_num()) {
-
-        }
-        // before this step j holds the number of left side elements < pivot or that are > pivot but did
-        // not find the match to get switched
-        if (swap_elements) {
-            atomic_fetch_add(&j,-1);
-        }
-        // after this step j holds the number of left side elements < pivot, as each process with swap_elements=true
-        // decrements j (swap_elements=true means that the process found an index j with v[j] < pivot, but no match to switch)
-
-//#pragma omp barrier
-        atomic_fetch_add(&phase2_synch, 1);
-        while(phase2_synch.load() < omp_get_thread_num()) {
-
-        }
-
-
-        if (swap_elements) {
-            if (l<j.load()) {
-                r = atomic_fetch_add(&k,-1);
-                if (v.at(r) < pivot && r > j.load()) {
-                    buffer[atomic_fetch_add(&b_fetch,1)] = r;
-                }
-            }
-            // processes with l >= j do not need to swap, as there are not enough elements to swap and their left index l
-            // is to the right of the cutting point (pivot point)
-            else {
-                swap_elements = false;
-            }
-        }
-
-//#pragma omp barrier
-
-        atomic_fetch_add(&phase3_synch, 1);
-        while(phase3_synch.load() < omp_get_thread_num()) {
-
-        }
-
-        if (swap_elements) {
-            r = buffer[atomic_fetch_add(&b_store,1)];
-            buffer_right = v.at(r);
-            v.at(l) = buffer_right;
-            v.at(r) = v.at(l);
-        }
-    }
-
-    return i.load();
-}
- */
 
 // Retrieve the element from v that has index k in sorted vector v'
 // Returns: Element v'[k]
