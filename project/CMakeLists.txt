@@ -20,3 +20,4 @@ add_subdirectory(test)
 
 enable_testing()
 add_test(NAME MY_TEST COMMAND my_test)
+add_test(NAME BENCHMARKS COMMAND benchmarks)
