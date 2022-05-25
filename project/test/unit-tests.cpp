@@ -77,7 +77,7 @@ TEST_CASE("Quicksort: vector of type <int>", "[correctness]") {
     for (int i=0; i<5; ++i) {
         w.push_back(i);
     }
-    quicksort_parallel(v, 0, v.size()-1);
+    quicksort_parallel_wrapper(v, 4096, 2);
     REQUIRE(v==w);
 }
 
@@ -92,7 +92,7 @@ TEST_CASE("Quicksort: vector of type <double>", "[correctness]") {
     for (const double value:sorted_values) {
         w.push_back(value);
     }
-    quicksort_parallel(v, 0, v.size()-1);
+    quicksort_parallel_wrapper(v, 4096, 2);
     REQUIRE(v==w);
 }
 
@@ -107,7 +107,7 @@ TEST_CASE("Quicksort: vector of type <char>", "[correctness]") {
     for (const char value:sorted_values) {
         w.push_back(value);
     }
-    quicksort_parallel(v, 0, v.size()-1);
+    quicksort_parallel_wrapper(v, 4096, 2);
     REQUIRE(v==w);
 }
 
@@ -121,7 +121,7 @@ TEST_CASE("Quickselect: vector of type <int>", "[correctness]") {
         v.push_back(value);
     }
 
-    int vk = quickselect(v, 0, v.size()-1, k);
+    int vk = quickselect_parallel_wrapper(v, k, 4096, 2);
     REQUIRE(vk==3);
 }
 
@@ -134,7 +134,7 @@ TEST_CASE("Quickselect: vector of type <double>", "[correctness]") {
         v.push_back(value);
     }
 
-    double vk = quickselect(v, 0, v.size()-1, k);
+    double vk = quickselect_parallel_wrapper(v, k, 4096, 2);
     REQUIRE(vk==2.38);
 }
 
@@ -147,6 +147,6 @@ TEST_CASE("Quickselect: vector of type <char>", "[correctness]") {
         v.push_back(value);
     }
 
-    char vk = quickselect(v, 0, v.size()-1, k);
+    char vk = quickselect_parallel_wrapper(v, k, 4096, 2);
     REQUIRE(vk=='h');
 }

@@ -10,8 +10,33 @@
 #endif //ALGENG
 
 namespace algeng {
-// Minimum number of vector elements for a vector to be processed by multiple threads
     const int MINIMUM_VECTOR_ELEMENT_NUMBER = 100000;
+    const int MINIMUM_BLOCK_NUMBER = 250;
+
+    template<typename T>
+    inline void move_pivot_to_last_index(std::vector<T> &v, int l_bound, int u_bound) {
+        // Compute median of 5 elements that are distributed evenly over vector and swap
+        // the element with the element on index 'u_bound'.
+        // Worst Case O(N^2) Search for Median, but it is only 5 elements.
+        int p1[5] = {l_bound, (l_bound+((u_bound+l_bound)/2))/2, (u_bound+l_bound)/2, (((u_bound+l_bound)/2)+u_bound)/2, u_bound};
+        for (int a:p1) {
+            int sorted_index=0;
+            for (int b:p1) {
+                if (v.at(a)>v.at(b))
+                    sorted_index++;
+            }
+            if (sorted_index==2) {
+                T buff = v.at(u_bound);
+                v.at(u_bound) = v.at(a);
+                v.at(a) = buff;
+                return;
+            }
+        }
+        T buff = v.at(u_bound);
+        v.at(u_bound) = v.at((u_bound+l_bound)/2);
+        v.at((u_bound+l_bound)/2) = buff;
+        return;
+    }
 
 // Partition (sub-)vector v[l_bound:u_bound] on element with index p
 // Returns: index of pivot element after partitioning
@@ -77,6 +102,38 @@ namespace algeng {
         return return_value;
     }
 
+    template<typename T>
+    inline void insertion_sort(std::vector<T> &v, int l_bound, int u_bound) {
+        int j;
+        T current;
+        for (int i = l_bound; i <= u_bound; i++) { // i=3
+            current = v.at(i); //1
+            j = i - 1; //j=-1
+
+            while (j >= l_bound && v.at(j) > current) {
+                v.at(j+1) = v.at(j);
+                j = j - 1;//j=-1
+            }
+
+            v.at(j+1) = current;
+        }
+    }
+
+    template<typename T>
+    inline void quicksort(std::vector<T> &v, int l_bound, int u_bound) {
+        if (u_bound > l_bound) {
+            if (u_bound - l_bound + 1 < 64) { // use insertion sort for small number of elements
+                insertion_sort(v, l_bound, u_bound);
+                return;
+            }
+            move_pivot_to_last_index(v, l_bound, u_bound);
+            int p = partition(v, l_bound, u_bound, u_bound);
+
+            quicksort(v, l_bound, p - 1);
+            quicksort(v, p + 1, u_bound);
+        }
+    }
+
 // Partition (sub-)vector v[l_bound:u_bound] on element with index p
 // Returns: index of pivot element after partitioning
     template<typename T>
@@ -87,7 +144,7 @@ namespace algeng {
         const T pivot = v.at(p);
         int return_value;
 
-        if (num_blocks < 4) {
+        if (num_blocks < MINIMUM_BLOCK_NUMBER) {
             return partition(v, l_bound, u_bound, p);
         }
 
@@ -340,94 +397,53 @@ namespace algeng {
     }
 
     template<typename T>
-    inline void insertion_sort(std::vector<T> &v, int l_bound, int u_bound) {
-        int j;
-        T current;
-        for (int i = l_bound; i <= u_bound; i++) { // i=3
-            current = v.at(i); //1
-            j = i - 1; //j=-1
-
-            while (j >= l_bound && v.at(j) > current) {
-                v.at(j+1) = v.at(j);
-                j = j - 1;//j=-1
-            }
-
-            v.at(j+1) = current;
-        }
-    }
-
-// Retrieve the element from v that has index k in sorted vector v'
-// Returns: Element v'[k]
-    template<typename T>
-    inline T quickselect(std::vector<T> &v, int l_bound, int u_bound, int k) {
+    inline T quickselect_parallel(std::vector<T> &v, int l_bound, int u_bound, int k, const int block_size, const int number_of_threads) {
         if (l_bound == u_bound) {
             return v.at(l_bound);
         }
-        int p = u_bound;
-        p = partition(v, l_bound, u_bound, p);
+        move_pivot_to_last_index(v, l_bound, u_bound);
+        int p = partition_fetch_add(v, l_bound, u_bound, u_bound, block_size, number_of_threads);
         if (p == k) {
             return v.at(p);
         } else if (p < k) {
-            return quickselect(v, p + 1, u_bound, k);
+            return quickselect_parallel(v, p + 1, u_bound, k, block_size, number_of_threads);
         } else {
-            return quickselect(v, l_bound, p - 1, k);
+            return quickselect_parallel(v, l_bound, p - 1, k, block_size, number_of_threads);
         }
     }
 
     template<typename T>
-    inline int choose_pivot(std::vector<T> &v, int l_bound, int u_bound) {
-        // Compute median of 5 elements that are distributed evenly over vector.
-        // Worst Case O(N^2) Search for Median, but it is only 5 elements.
-        int p1[5] = {l_bound, (l_bound+((u_bound+l_bound)/2))/2, (u_bound+l_bound)/2, (((u_bound+l_bound)/2)+u_bound)/2, u_bound};
-        for (int a:p1) {
-            int sorted_index=0;
-            for (int b:p1) {
-                if (v.at(a)>v.at(b))
-                    sorted_index++;
-            }
-            if (sorted_index==2) {
-                return a;
-            }
-        }
-        return (u_bound+l_bound)/2;
-    }
-
-    template<typename T>
-    inline void quicksort(std::vector<T> &v, int l_bound, int u_bound) {
-        if (u_bound > l_bound) {
-            if (u_bound - l_bound + 1 < 64) { // use insertion sort for small number of elements
-                insertion_sort(v, l_bound, u_bound);
-                return;
-            }
-
-            int p = partition(v, l_bound, u_bound, u_bound);
-
-            quicksort(v, l_bound, p - 1);
-            quicksort(v, p + 1, u_bound);
-        }
-    }
-
-    template<typename T>
-    void quicksort_parallel(std::vector<T> &v, int l_bound, int u_bound) {
+    void quicksort_parallel(std::vector<T> &v, int l_bound, int u_bound, const int block_size, const int number_of_threads) {
         if (u_bound > l_bound) {
             if (u_bound-l_bound < MINIMUM_VECTOR_ELEMENT_NUMBER) {
                 quicksort(v, l_bound, u_bound);
                 return;
             }
 
-            int p = partition_fetch_add(v, l_bound, u_bound, u_bound, 4092, omp_get_num_procs());
+            move_pivot_to_last_index(v, l_bound, u_bound);
+            int p = partition_fetch_add(v, l_bound, u_bound, u_bound, block_size, number_of_threads);
 
 #pragma omp parallel sections
             {
 #pragma omp section
                 {
-                    quicksort_parallel(v, l_bound, p - 1);
+                    quicksort_parallel(v, l_bound, p - 1, block_size, number_of_threads/2);
                 }
 #pragma omp section
                 {
-                    quicksort_parallel(v, p + 1, u_bound);
+                    quicksort_parallel(v, p + 1, u_bound, block_size, number_of_threads/2);
                 }
             }
         }
+    }
+
+    template<typename T>
+    inline T quickselect_parallel_wrapper(std::vector<T> &v, const int k, const int block_size, const int number_of_threads) {
+        return quickselect_parallel(v, 0, v.size()-1, k, block_size, number_of_threads);
+    }
+
+    template<typename T>
+    inline void quicksort_parallel_wrapper(std::vector<T> &v, const int block_size, const int number_of_threads) {
+        quicksort_parallel(v, 0, v.size()-1, block_size, number_of_threads);
     }
 }
