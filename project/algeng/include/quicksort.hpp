@@ -120,6 +120,23 @@ namespace algeng {
     }
 
     template<typename T>
+    inline void insertion_sort_descending(std::vector<T> &v, int l_bound, int u_bound) {
+        int j;
+        T current;
+        for (int i = l_bound; i <= u_bound; i++) { // i=3
+            current = v.at(i); //1
+            j = i - 1; //j=-1
+
+            while (j <= l_bound && v.at(j) > current) {
+                v.at(j+1) = v.at(j);
+                j = j - 1;//j=-1
+            }
+
+            v.at(j+1) = current;
+        }
+    }
+
+    template<typename T>
     inline void quicksort(std::vector<T> &v, int l_bound, int u_bound) {
         if (u_bound > l_bound) {
             if (u_bound - l_bound + 1 < 64) { // use insertion sort for small number of elements
@@ -159,7 +176,7 @@ namespace algeng {
         std::atomic<int> cul(0);
         std::atomic<int> cur(0);
 
-#pragma omp parallel num_threads(number_of_threads) shared(size, num_blocks, pivot, i, j, k)
+#pragma omp parallel num_threads(number_of_threads) shared(i, j, k)
         {
             bool fetch_left = true;
             bool fetch_right = true;
@@ -235,6 +252,9 @@ namespace algeng {
          *  Swap elements between remaining left and right blocks
          *  -> everything left of j OR everything right of k is now correctly partitioned
          */
+
+        /*insertion_sort(clean_up_left, 0, cul.load());
+        insertion_sort_descending(clean_up_right, 0, cur.load());*/
 
         std::sort(clean_up_left.data(), clean_up_left.data() + cul.load());
         std::sort(clean_up_right.data(), clean_up_right.data() + cur.load(), [](int a, int b) {
@@ -389,7 +409,6 @@ namespace algeng {
                 }
             }
 
-
             return_value = (v.at(r) <= pivot) ? r : r - 1;
         }
 
@@ -415,7 +434,7 @@ namespace algeng {
     template<typename T>
     void quicksort_parallel(std::vector<T> &v, int l_bound, int u_bound, const int block_size, const int number_of_threads) {
         if (u_bound > l_bound) {
-            if (u_bound-l_bound < MINIMUM_VECTOR_ELEMENT_NUMBER) {
+            if (u_bound-l_bound < MINIMUM_VECTOR_ELEMENT_NUMBER or number_of_threads<=1) {
                 quicksort(v, l_bound, u_bound);
                 return;
             }
@@ -423,16 +442,20 @@ namespace algeng {
             move_pivot_to_last_index(v, l_bound, u_bound);
             int p = partition_fetch_add(v, l_bound, u_bound, u_bound, block_size, number_of_threads);
 
-#pragma omp parallel sections
+#pragma omp parallel
             {
-#pragma omp section
+#pragma omp single nowait
                 {
-                    quicksort_parallel(v, l_bound, p - 1, block_size, number_of_threads/2);
+#pragma omp task
+                    {
+                        quicksort_parallel(v, l_bound, p, block_size, number_of_threads/2);
+                    }
+#pragma omp task
+                    {
+                        quicksort_parallel(v, p + 1, u_bound, block_size, number_of_threads/2);
+                    }
                 }
-#pragma omp section
-                {
-                    quicksort_parallel(v, p + 1, u_bound, block_size, number_of_threads/2);
-                }
+#pragma omp taskwait
             }
         }
     }
