@@ -16,7 +16,7 @@ TEST_CASE("Partition_fetch_add: vector size smaller < block_size, single-threade
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 1);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 1);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -32,7 +32,7 @@ TEST_CASE("Partition_fetch_add: vector size between block_size and 2*block_size,
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 1);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 1);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -47,7 +47,7 @@ TEST_CASE("Partition_fetch_add: sorted vector, single-threaded", "[correctness]"
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 128, 1);
+    partition_fetch_add(v1, 0, v1.size()-1, 128, 1);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -62,7 +62,7 @@ TEST_CASE("Partition_fetch_add: reversed sorted vector, single-threaded", "[corr
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 1);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 1);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -77,7 +77,7 @@ TEST_CASE("Partition_fetch_add: vector size smaller < block_size, multithreaded"
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 2);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 2);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -93,7 +93,7 @@ TEST_CASE("Partition_fetch_add: vector size between block_size and 2*block_size,
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 2);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 2);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -108,7 +108,7 @@ TEST_CASE("Partition_fetch_add: sorted vector, multi-threaded", "[correctness]")
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 128, 2);
+    partition_fetch_add(v1, 0, v1.size()-1, 128, 2);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -123,7 +123,7 @@ TEST_CASE("Partition_fetch_add: reversed sorted vector, multi-threaded", "[corre
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 2);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 2);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }
@@ -138,7 +138,7 @@ TEST_CASE("Partition_fetch_add: equal vector, multi-threaded", "[correctness]") 
 
     int pivot = v1.back();
 
-    partition_fetch_add(v1, 0, v1.size()-1, v1.size()-1, 8, 2);
+    partition_fetch_add(v1, 0, v1.size()-1, 8, 2);
 
     REQUIRE(std::is_partitioned(v1.begin(), v1.end(), [&pivot](int x) {return x<=pivot;}));
 }

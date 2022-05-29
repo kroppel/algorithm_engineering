@@ -31,7 +31,7 @@ TEST_CASE("Partition_fetch_add: vector of type <int> with 200000000 elements", "
     runtime1 = omp_get_wtime() - start_time;
 
     start_time = omp_get_wtime();
-    partition_fetch_add(v2, 0, v2.size()-1, v2.size()-1, 16*2048, 2);
+    partition_fetch_add(v2, 0, v2.size()-1, 16*2048, 2);
     runtime2 = omp_get_wtime() - start_time;
 
     start_time = omp_get_wtime();
@@ -45,7 +45,6 @@ TEST_CASE("Partition_fetch_add: vector of type <int> with 200000000 elements", "
     std::cout << "std::partition with runtime: " << std::setprecision(6) << runtime1 << "s\n";
     std::cout << "partition_fetch_add with runtime: " << std::setprecision(6) << runtime2 << "s\n";
     std::cout << "partition_pivot with runtime: " << std::setprecision(6) << runtime3 << "s\n";
-    std::cout << "and MINIMUM_VECTOR_ELEMENT_NUMBER=" << MINIMUM_VECTOR_ELEMENT_NUMBER << "\n";
 }
 
 TEST_CASE("Quicksort_parallel: vector of type <int> with 200000000 elements", "[performance+correctness]") {
@@ -84,5 +83,4 @@ TEST_CASE("Quicksort_parallel: vector of type <int> with 200000000 elements", "[
     std::cout << "std::sort with runtime: " << std::setprecision(6) << runtime1 << "s\n";
     std::cout << "quicksort_parallel with runtime: " << std::setprecision(6) << runtime2 << "s\n";
     std::cout << "quicksort with runtime: " << std::setprecision(6) << runtime3 << "s\n";
-    std::cout << "and MINIMUM_VECTOR_ELEMENT_NUMBER=" << MINIMUM_VECTOR_ELEMENT_NUMBER << "\n";
 }
