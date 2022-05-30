@@ -60,16 +60,16 @@ namespace algeng {
         return;
     }
 
-// Partition (sub-)vector v[l_bound:u_bound] on element with index p
+// Partition (sub-)vector v[l_bound:u_bound] on pivot element on index u_bound
 // Returns: index of pivot element after partitioning
     template<typename T>
-    inline int partition(std::vector<T> &v, int l_bound, int u_bound, int p) {
+    inline int partition(std::vector<T> &v, int l_bound, int u_bound) {
         T buffer;
         int i = l_bound;
         int j = u_bound - 1;
 
         if (u_bound > l_bound) {
-            T pivot = v.at(p);
+            T pivot = v.at(u_bound);
 
             while (i < j) {
                 // Make sure '>' and '<' operators are defined for given T!
@@ -87,7 +87,7 @@ namespace algeng {
                 }
             }
             if (v.at(i) > pivot) {
-                v.at(p) = v.at(i);
+                v.at(u_bound) = v.at(i);
                 v.at(i) = pivot;
             }
         }
@@ -173,7 +173,7 @@ namespace algeng {
                 return;
             }
             median_of_3(v, l_bound, u_bound);
-            int p = partition(v, l_bound, u_bound, u_bound);
+            int p = partition(v, l_bound, u_bound);
 
             quicksort(v, l_bound, p - 1);
             quicksort(v, p + 1, u_bound);
@@ -191,7 +191,7 @@ namespace algeng {
         int return_value;
 
         if (num_blocks < number_of_threads) {
-            return partition(v, l_bound, u_bound, u_bound);
+            return partition(v, l_bound, u_bound);
         }
 
         // indices for synchronized vector access
@@ -226,8 +226,8 @@ namespace algeng {
                     int a = 0;
                     int b = 0;
                     // global indices of first block element
-                    int v_a = l * block_size;
-                    int v_b = size - ((r + 1) * block_size);
+                    int v_a = l_bound + l * block_size;
+                    int v_b = l_bound + size - ((r + 1) * block_size);
                     T buffer;
                     bool swap_left = false;
                     bool swap_right = false;
@@ -269,10 +269,10 @@ namespace algeng {
              *  if fetch_right = false -> right block needs ...
             */
             if (!fetch_left) {
-                clean_up_left.at(std::atomic_fetch_add(&cul, 1)) = l * block_size;
+                clean_up_left.at(std::atomic_fetch_add(&cul, 1)) = l_bound + l * block_size;
             }
             if (!fetch_right) {
-                clean_up_right.at(std::atomic_fetch_add(&cur, 1)) = size - ((r + 1) * block_size);
+                clean_up_right.at(std::atomic_fetch_add(&cur, 1)) = l_bound + size - ((r + 1) * block_size);
             }
         }
 
@@ -346,14 +346,14 @@ namespace algeng {
                 * Clean up 2nd step:
                 * partition remainder between L and R
                 */
-                partition_index = (j.load() * block_size <= size - (k.load() * block_size) - 1
-                                  ) ? partition_pivot(v, (j.load()) * block_size, size - (k.load() * block_size) - 1, pivot)
+                partition_index = (l_bound + j.load() * block_size <= l_bound + size - (k.load() * block_size) - 1
+                                  ) ? partition_pivot(v, l_bound + (j.load()) * block_size, l_bound + size - (k.load() * block_size) - 1, pivot)
                                     : -1;
             }
         }
 
         if (a_block == cul.load()) {
-            int l = (partition_index == -1) ? j.load() * block_size : partition_index + 1;
+            int l = (partition_index == -1) ? l_bound + j.load() * block_size : partition_index + 1;
 
             /*
              * Cleanup 3rd step:
@@ -400,9 +400,8 @@ namespace algeng {
             v.at(u_bound) = v.at(return_value);
             v.at(return_value) = buffer;
 
-            std::cout << "LEFT";
         } else {
-            int r = (partition_index == -1) ? size - (k.load() * block_size) - 1 : partition_index;
+            int r = (partition_index == -1) ? l_bound + size - (k.load() * block_size) - 1 : partition_index;
 
             /*
              * Cleanup 3rd step:
@@ -448,7 +447,6 @@ namespace algeng {
             buffer = v.at(u_bound);
             v.at(u_bound) = v.at(return_value);
             v.at(return_value) = buffer;
-            std::cout << "RIGHT";
         }
 
         return return_value;
@@ -479,13 +477,13 @@ namespace algeng {
                 return;
             }
 
-            /*else if (u_bound-l_bound < 1000000) {
+            else if (u_bound-l_bound < 1000000) {
 #pragma omp parallel 
                 {
 #pragma omp single nowait
                     {
                         median_of_3(v, l_bound, u_bound);
-                        int p = partition(v, l_bound, u_bound, u_bound);
+                        int p = partition(v, l_bound, u_bound);
 #pragma omp task
                         {
                             quicksort_parallel(v, l_bound, p, block_size, number_of_threads*(p-l_bound)/(u_bound-l_bound));
@@ -497,15 +495,11 @@ namespace algeng {
                     }
 #pragma omp taskwait
                 }
-            }*/
+            }
 
             else {
-                std::cout << "MULTITHREADED PARTITIONING WITH SIZE " << u_bound-l_bound << " at " << l_bound <<  "\n";
                 median_of_3(v, l_bound, u_bound);
                 int p = partition_fetch_add(v, l_bound, u_bound, block_size, number_of_threads);
-                std::cout << "PIVOT: " << p << "\n";
-
-
 
                 quicksort_parallel(v, l_bound, p-1, block_size, number_of_threads);
                 quicksort_parallel(v, p + 1, u_bound, block_size, number_of_threads);
