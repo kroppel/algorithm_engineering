@@ -4,13 +4,11 @@ project(algeng LANGUAGES CXX)
 # search for OpenMP, REQUIRED -> fatal error if not found
 find_package(OpenMP REQUIRED)
 
-# add a library to the project using the specified source files
-add_library(algeng STATIC include/quicksort.h src/quicksort.cpp)
+# add an interface library -> does not generate build output by itself
+add_library(algeng INTERFACE)
 
-# PUBLIC -> targets that link to this target get that include directory
-# src directory is made PUBLIC because header file needs to include src file
-# to access the implementation of a function template
-target_include_directories(algeng PUBLIC include PUBLIC src)
+# INTERFACE -> include directories will be inherited by targets that link with this library
+target_include_directories(algeng INTERFACE include)
 
-# link to the imported target provided by the FindOpenMP module
-target_link_libraries(algeng PUBLIC OpenMP::OpenMP_CXX)
+# INTERFACE -> each target that links with this library will also link with OpenMP
+target_link_libraries(algeng INTERFACE OpenMP::OpenMP_CXX)

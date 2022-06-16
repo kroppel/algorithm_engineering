@@ -1,0 +1,38 @@
+1. What are extension types in the context of Python?
+
+Extension types in the context of Python refers to any Python
+type that is implemented as a native C struct. Cython allows
+for a simpler implementation of these Extension Types than
+by writing them in pure C.
+
+2. How do extension types data fields in Cython differ
+from data fields in Python classes?
+
+The fields in a Cython extension type are by default only accessible from
+within Cython. To gain access from Python, the access level for the field
+has to be declared. Each field has to be declared in each case at the start
+of the class.
+Standard Python class data fields do not have to be declared,
+they can be used and initialized directly inside the class body or
+the init function.
+
+3. Give a simple description of how to wrap C / C++
+code in Cython.
+
+A given C/C++ file with its Header file can be wrapped in Cython by doing
+the following:
+-Create .pyx file import needed C/C++ Datatypes etc.
+-give compiler directives:
+    # distutils: language = c++ (if you want the compiler to produce c++ code 
+                                instead of c code in the first compilation step)
+    # distutils: sources = source.cpp (declare source files)
+-If the C/C++ code to be wrapped should be compiled with additional flags,
+they can also be declared using compiler directives.
+-To access a funtion of the C/C++ code in Cython, an extern cdef function 
+that maps to the initial C/C++ function has to be declared in the Header file:
+    cdef extern from 'my_header.h':
+        <Function Signature identical to Signature in Header File>
+-Now each cdef function has to be wrapped with a def function to be accessible
+from python, so just define a def function that calls the cdef function and
+return is return value. This function can now be imported and used inside
+regular python code.
