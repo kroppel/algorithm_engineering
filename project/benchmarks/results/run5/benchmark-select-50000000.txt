@@ -1,0 +1,8 @@
+Vector size 50000000
+Block size 2500
+Number Threads 48
+
+Is nth element: 1
+std::nth_element with runtime: 15.3174s
+quickselect_parallel_wrapper with runtime: 1.19662s
+__gnu_parallel::nth_element with runtime: 3.54536s

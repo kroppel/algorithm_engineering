@@ -1,0 +1,8 @@
+Vector size 20000000
+Block size 1000
+Number Threads 48
+
+Is sorted: 1
+std::sort with runtime: 46.7824s
+quicksort_parallel_wrapper with runtime: 44.2s
+__gnu_parallel::sort with runtime: 0.833188s

@@ -1,0 +1,8 @@
+Vector size 500000000
+Block size 25000
+Number Threads 48
+
+Is partitioned: 1
+std::partition with runtime: 27.0174s
+partition_fetch_add with runtime: 1.07274s
+__gnu_parallel::partition with runtime: 1.21451s
