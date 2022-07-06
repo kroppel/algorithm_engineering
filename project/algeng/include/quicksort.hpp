@@ -7,7 +7,6 @@
 #include <functional>
 #include <iterator>
 #include <algorithm>
-#endif //ALGENG
 
 namespace algeng {
     template<typename T>
@@ -517,3 +516,5 @@ namespace algeng {
         quicksort_parallel(v, 0, v.size()-1, block_size, number_of_threads);
     }
 }
+
+#endif //ALGENG
