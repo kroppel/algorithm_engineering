@@ -29,6 +29,16 @@ got the join signal from every forked process, he can continue running.
 3. Read Chapter 1 from Computer Systems: A programmer's perspective and
 discuss one thing you find particularly interesting.
 
+For me the most interesting thing is the complexity of the modern hardware. Figure 1.5
+on page 9 already shows how many components of a machine are part of a simple hello world
+program. But this illustration is again hiding a lot of complexity of the shown components,
+especially the CPU's. Not only the later mentioned cache hierarchy plays an important role
+when you not only want to write working programs, but also performant ones. One very
+important aspect to me is the whole microarchitecture of the CPU, or rather its
+implications. For example if you are writing a program that should run on a CPU
+that features 512 bit vector processing pipelines and registers, there is usually much more
+potential to improve performance through vectorization than on a CPU that only supports
+128 vectors (given that the throughput for the 512 bit vector instruction is not significantly lower).
 
 4. Read the paper ... and explain the figure "Performance gains after 
 Moore's law ends.
