@@ -181,6 +181,18 @@ namespace algeng {
 
 // Partition (sub-)vector v[l_bound:u_bound] on element with index p
 // Returns: index of pivot element after partitioning
+    
+    /**
+     * Partition (partial) vector multithreaded.
+     *
+     * Partition (partial) vector using the specified amound of threads and block size.
+     *
+     * @param &v Reference of input vector.
+     * @param l_bound Lower bound defining the part of the vector to be partitioned.
+     * @param u_bound Upper bound defining the part of the vector to be partitioned.
+     * @param block_size Block size to be used for partitioning.
+     * @param number_of_threads Number of threads to be used for partitioning.
+     */
     template<typename T>
     inline int partition_fetch_add(std::vector<T> &v, const int l_bound, const int u_bound, const int block_size,
                                    const int number_of_threads) {
@@ -450,7 +462,20 @@ namespace algeng {
 
         return return_value;
     }
-
+    
+    /**
+     * Select kth vector element multithreaded.
+     *
+     * Select the kth element from (partial) vector multithreaded using the specified number of threads
+     * and block size.
+     *
+     * @param &v Reference of vector to be sorted.
+     * @param l_bound Lower bound defining the part of the vector to be selected from.
+     * @param u_bound Upper bound defining the part of the vector to be selected from.
+     * @param k Position of the element to be retrieved in vector v if v was sorted.
+     * @param block_size Block size to be used for element selection.
+     * @param number_of_threads Number of threads to be used for element selection.
+     */
     template<typename T>
     inline T quickselect_parallel(std::vector<T> &v, int l_bound, int u_bound, int k, const int block_size, const int number_of_threads) {
         if (l_bound == u_bound) {
@@ -467,6 +492,18 @@ namespace algeng {
         }
     }
 
+    /**
+     * Sort vector multithreaded.
+     *
+     * Sort the given partial vector multithreaded using the specified number of threads
+     * and block size.
+     *
+     * @param &v Reference of vector to be sorted.
+     * @param l_bound Lower bound defining the part of the vector to be sorted.
+     * @param u_bound Upper bound defining the part of the vector to be sorted.
+     * @param block_size Block size to be used for sorting.
+     * @param number_of_threads Number of threads to be used for sorting.
+     */
     template<typename T>
     void quicksort_parallel(std::vector<T> &v, int l_bound, int u_bound, const int block_size, const int number_of_threads) {
         if (u_bound > l_bound) {
@@ -506,11 +543,32 @@ namespace algeng {
         }
     }
 
+    /**
+     * Select kth vector element multithreaded.
+     *
+     * Select the kth vector element multithreaded using the specified number of threads
+     * and block size.
+     *
+     * @param &v Reference of vector to be selected from.
+     * @param k Position of the element to be retrieved in vector v if v was sorted.
+     * @param block_size Block size to be used for element selection.
+     * @param number_of_threads Number of threads to be used for element selection.
+     */
     template<typename T>
     inline T quickselect_parallel_wrapper(std::vector<T> &v, const int k, const int block_size, const int number_of_threads) {
         return quickselect_parallel(v, 0, v.size()-1, k, block_size, number_of_threads);
     }
 
+    /**
+     * Sort vector multithreaded.
+     *
+     * Sort the given vector multithreaded using the specified number of threads
+     * and block size.
+     *
+     * @param &v Reference of vector to be sorted.
+     * @param block_size Block size to be used for sorting.
+     * @param number_of_threads Number of threads to be used for sorting.
+     */
     template<typename T>
     inline void quicksort_parallel_wrapper(std::vector<T> &v, const int block_size, const int number_of_threads) {
         quicksort_parallel(v, 0, v.size()-1, block_size, number_of_threads);
