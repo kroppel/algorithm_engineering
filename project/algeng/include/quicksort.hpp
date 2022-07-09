@@ -196,6 +196,7 @@ namespace algeng {
     template<typename T>
     inline int partition_fetch_add(std::vector<T> &v, const int l_bound, const int u_bound, const int block_size,
                                    const int number_of_threads) {
+        // size leaves out pivot element at end of vector because it will not be included in the processing
         const int size = u_bound-l_bound;
         const int num_blocks = size / block_size;
         const T pivot = v.at(u_bound);
