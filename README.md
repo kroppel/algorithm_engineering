@@ -2,7 +2,7 @@
 
 This repository contains all code written for the course "algorithm engineering".
 
-## Introduction
+## About this project
 
 The project consists of a Header-Only-Library providing functions that perform parallel in-place Partitioning, Quickselect and Quicksort. In case of Partitioning and Quickselect, benchmarks show that a major performance gain can be obtained in comparison to serial sorting for sufficiently high workloads, given that enough compute resources are available. All three implementations were benchmarked against *std::sort* and *__gnu_parallel::sort*.
 
